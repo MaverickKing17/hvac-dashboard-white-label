@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Activity, 
   BarChart3, 
-  Thermostat, 
+  Thermometer, 
   Users, 
   CloudSun, 
   AlertTriangle, 
@@ -11,9 +11,20 @@ import {
   Search
 } from 'lucide-react';
 
+// Define the shape of our device data for TypeScript
+interface SeamDevice {
+  device_id: string;
+  device_type: string;
+  properties: {
+    name: string;
+    online: boolean;
+    manufacturer?: string;
+  };
+}
+
 const App = () => {
   // --- STATE MANAGEMENT ---
-  const [devices, setDevices] = useState<any[]>([]);
+  const [devices, setDevices] = useState<SeamDevice[]>([]);
   const [weather, setWeather] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('fleet');
@@ -130,7 +141,7 @@ const App = () => {
 
         {/* LIVE SEAM DEVICE FLEET */}
         <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <Thermostat className="text-blue-600" /> Connected Managed Units
+          <Thermometer className="text-blue-600" /> Connected Managed Units
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {devices.map((device) => (
