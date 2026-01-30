@@ -5,35 +5,23 @@ import {
   Thermometer, 
   Users, 
   CloudSun, 
-  AlertTriangle, 
   Send,
   Wrench,
-  Search
+  LayoutDashboard,
+  Settings,
+  Bell
 } from 'lucide-react';
 
-// Define the shape of our device data for TypeScript
-interface SeamDevice {
-  device_id: string;
-  device_type: string;
-  properties: {
-    name: string;
-    online: boolean;
-    manufacturer?: string;
-  };
-}
-
 const App = () => {
-  // --- STATE MANAGEMENT ---
-  const [devices, setDevices] = useState<SeamDevice[]>([]);
+  const [devices, setDevices] = useState<any[]>([]);
   const [weather, setWeather] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('fleet');
 
-  // --- 1. FETCH SEAM DEVICES ---
   useEffect(() => {
-    const getSeamFleet = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('https://connect.getseam.com/devices/list', {
+        // Seam API Fetch
+        const seamRes = await fetch('https://connect.getseam.com/devices/list', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${import.meta.env.VITE_SEAM_API_KEY}`,
@@ -41,135 +29,113 @@ const App = () => {
           },
           body: JSON.stringify({}),
         });
-        const data = await response.json();
-        setDevices(data.devices || []);
-      } catch (err) {
-        console.error("Seam fetch failed:", err);
-      }
-    };
+        const seamData = await seamRes.json();
+        setDevices(seamData.devices || []);
 
-    // --- 2. FETCH TORONTO WEATHER (GTA) ---
-    const getGTAWeather = async () => {
-      try {
-        const res = await fetch(
+        // Toronto Weather Fetch
+        const weatherRes = await fetch(
           `https://api.openweathermap.org/data/2.5/weather?q=Toronto,ca&units=metric&appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`
         );
-        const data = await res.json();
-        setWeather(data);
+        const weatherData = await weatherRes.json();
+        setWeather(weatherData);
       } catch (err) {
-        console.error("Weather fetch failed:", err);
+        console.error("Fetch failed:", err);
       }
       setLoading(false);
     };
-
-    getSeamFleet();
-    getGTAWeather();
+    fetchData();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <Activity className="animate-spin h-10 w-10 text-blue-600 mx-auto mb-4" />
-          <p className="text-slate-600 font-medium">Syncing GTA Service Network...</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex h-screen items-center justify-center bg-slate-900 text-white italic">
+      Loading Ambient Twin Intelligence...
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-      {/* SIDEBAR NAVIGATION */}
-      <nav className="fixed left-0 top-0 h-full w-64 bg-slate-900 text-white p-6 hidden lg:block">
-        <div className="flex items-center gap-2 mb-10">
-          <div className="bg-blue-600 p-2 rounded-lg"><Activity size={24} /></div>
-          <h1 className="text-xl font-bold tracking-tight">Toronto HVAC</h1>
+    <div className="flex min-h-screen bg-[#0f172a] text-slate-200">
+      {/* SIDEBAR FROM YOUR HTML DESIGN */}
+      <aside className="w-64 bg-[#1e293b] border-r border-slate-700 hidden md:flex flex-col">
+        <div className="p-6 flex items-center gap-3">
+          <div className="bg-blue-500 p-2 rounded-lg"><Activity className="text-white" /></div>
+          <span className="text-xl font-bold tracking-tight text-white">Ambient Twin</span>
         </div>
         
-        <div className="space-y-4">
-          <button onClick={() => setActiveTab('fleet')} className={`w-full flex items-center gap-3 p-3 rounded-lg transition ${activeTab === 'fleet' ? 'bg-blue-600' : 'hover:bg-slate-800'}`}>
-            <BarChart3 size={20} /> Dashboard
-          </button>
-          <button className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 text-slate-400">
-            <Users size={20} /> Client Manager
-          </button>
-          <button className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 text-slate-400">
-            <Wrench size={20} /> Dispatcher
-          </button>
+        <nav className="flex-1 px-4 space-y-2 mt-4">
+          <NavItem icon={<LayoutDashboard size={20}/>} label="Overview" active />
+          <NavItem icon={<Thermometer size={20}/>} label="Device Fleet" />
+          <NavItem icon={<Users size={20}/>} label="Client Portals" />
+          <NavItem icon={<Wrench size={20}/>} label="Maintenance" />
+        </nav>
+
+        <div className="p-4 mt-auto border-t border-slate-700">
+          <NavItem icon={<Settings size={20}/>} label="Settings" />
         </div>
+      </aside>
 
-        <div className="absolute bottom-10 left-6 right-6 p-4 bg-slate-800 rounded-xl border border-slate-700">
-          <p className="text-xs text-slate-400 uppercase font-bold mb-1">Partner Tier</p>
-          <p className="text-sm font-medium">Enterprise Suite</p>
-        </div>
-      </nav>
-
-      {/* MAIN CONTENT AREA */}
-      <main className="lg:ml-64 p-8">
-        {/* HEADER SECTION */}
-        <header className="flex justify-between items-center mb-8">
-          <div>
-            <h2 className="text-3xl font-extrabold text-slate-900">Operational Overview</h2>
-            <p className="text-slate-500">Service Coverage: GTA East & West</p>
-          </div>
-
-          {/* REAL WEATHER CARD */}
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
-            <CloudSun className="text-orange-500" size={32} />
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase">Toronto (YYZ)</p>
-              <p className="text-xl font-bold">{weather?.main?.temp ? Math.round(weather.main.temp) : '--'}°C</p>
+      {/* MAIN DASHBOARD AREA */}
+      <main className="flex-1 p-8 overflow-y-auto">
+        {/* TOP NAVIGATION BAR */}
+        <div className="flex justify-between items-center mb-10">
+          <h2 className="text-3xl font-bold text-white tracking-tight">SaaS Deployment <span className="text-blue-500">Overview</span></h2>
+          <div className="flex items-center gap-6">
+            {/* REAL TORONTO WEATHER CARD */}
+            <div className="bg-[#1e293b] px-4 py-2 rounded-xl border border-slate-700 flex items-center gap-3">
+              <CloudSun className="text-yellow-400" />
+              <span className="font-semibold text-white">{weather?.main?.temp ? Math.round(weather.main.temp) : '--'}°C</span>
+            </div>
+            <div className="relative p-2 bg-[#1e293b] rounded-full border border-slate-700">
+              <Bell size={20} />
+              <div className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full border-2 border-[#0f172a]"></div>
             </div>
           </div>
-        </header>
-
-        {/* KEY PERFORMANCE INDICATORS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-            <p className="text-slate-500 text-sm font-medium mb-1">Active Fleet Units</p>
-            <h3 className="text-4xl font-black text-blue-600">{devices.length}</h3>
-          </div>
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-            <p className="text-slate-500 text-sm font-medium mb-1">Annual ROI Saved</p>
-            <h3 className="text-4xl font-black text-emerald-600">$1,140</h3>
-          </div>
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-            <p className="text-slate-500 text-sm font-medium mb-1">Open Alerts</p>
-            <h3 className="text-4xl font-black text-rose-500">2</h3>
-          </div>
         </div>
 
-        {/* LIVE SEAM DEVICE FLEET */}
-        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <Thermometer className="text-blue-600" /> Connected Managed Units
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {devices.map((device) => (
-            <div key={device.device_id} className="bg-white p-6 rounded-3xl border border-slate-200 hover:border-blue-400 transition group">
-              <div className="flex justify-between items-start mb-4">
-                <div className="bg-blue-50 p-3 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition">
-                  <Activity size={24} />
+        {/* METRIC CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <MetricCard title="Connected Devices" value={devices.length} color="text-blue-400" />
+          <MetricCard title="System Efficiency" value="94.2%" color="text-emerald-400" />
+          <MetricCard title="Monthly ROI" value="$1,140" color="text-purple-400" />
+        </div>
+
+        {/* DEVICE LIST (MAPPED FROM SEAM API) */}
+        <div className="bg-[#1e293b] rounded-2xl border border-slate-700 p-6">
+          <h3 className="text-lg font-bold mb-6 text-white uppercase tracking-wider">Active Service Fleet</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {devices.map((device) => (
+              <div key={device.device_id} className="bg-[#0f172a] p-5 rounded-xl border border-slate-800 flex justify-between items-center group hover:border-blue-500 transition">
+                <div>
+                  <p className="font-bold text-white">{device.properties.name}</p>
+                  <p className="text-xs text-slate-500">ID: {device.device_id.substring(0, 8)}...</p>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${device.properties.online ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}>
-                  {device.properties.online ? 'Live' : 'Offline'}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className={`h-2 w-2 rounded-full ${device.properties.online ? 'bg-green-500 animate-pulse' : 'bg-slate-600'}`}></span>
+                  <button className="p-2 bg-[#1e293b] rounded-lg hover:bg-blue-600 transition">
+                    <Send size={14} />
+                  </button>
+                </div>
               </div>
-              <h4 className="text-lg font-bold text-slate-900">{device.properties.name || "Unnamed Unit"}</h4>
-              <p className="text-slate-400 text-sm mb-4">Location: Toronto Metropolitan Area</p>
-              <div className="flex gap-2">
-                <button className="flex-1 bg-slate-900 text-white text-xs font-bold py-3 rounded-xl hover:bg-blue-600 transition">
-                  Diagnostics
-                </button>
-                <button className="p-3 bg-slate-100 rounded-xl hover:bg-slate-200 transition">
-                  <Send size={16} className="text-slate-600" />
-                </button>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </main>
     </div>
   );
 };
+
+// --- HELPER COMPONENTS TO MATCH YOUR HTML DESIGN ---
+const NavItem = ({ icon, label, active = false }: any) => (
+  <div className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition ${active ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-[#334155] hover:text-white'}`}>
+    {icon}
+    <span className="font-medium">{label}</span>
+  </div>
+);
+
+const MetricCard = ({ title, value, color }: any) => (
+  <div className="bg-[#1e293b] p-6 rounded-2xl border border-slate-700">
+    <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mb-2">{title}</p>
+    <p className={`text-4xl font-black ${color}`}>{value}</p>
+  </div>
+);
 
 export default App;
