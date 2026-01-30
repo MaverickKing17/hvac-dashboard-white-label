@@ -1,15 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Activity, 
-  BarChart3, 
-  Thermometer, 
-  Users, 
-  CloudSun, 
-  Send,
-  Wrench,
-  LayoutDashboard,
-  Settings,
-  Bell
+  Activity, LayoutDashboard, Thermometer, Users, Wrench, 
+  Settings, CloudSun, Bell, Send, ShieldCheck
 } from 'lucide-react';
 
 const App = () => {
@@ -20,7 +12,7 @@ const App = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Seam API Fetch
+        // 1. Fetch Seam Devices
         const seamRes = await fetch('https://connect.getseam.com/devices/list', {
           method: 'POST',
           headers: {
@@ -30,92 +22,120 @@ const App = () => {
           body: JSON.stringify({}),
         });
         const seamData = await seamRes.json();
+        // Filters for your Honeywell devices seen in the screenshot
         setDevices(seamData.devices || []);
 
-        // Toronto Weather Fetch
+        // 2. Fetch GTA Weather
         const weatherRes = await fetch(
           `https://api.openweathermap.org/data/2.5/weather?q=Toronto,ca&units=metric&appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`
         );
         const weatherData = await weatherRes.json();
         setWeather(weatherData);
       } catch (err) {
-        console.error("Fetch failed:", err);
+        console.error("Dashboard Sync Error:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchData();
   }, []);
 
   if (loading) return (
-    <div className="flex h-screen items-center justify-center bg-slate-900 text-white italic">
-      Loading Ambient Twin Intelligence...
+    <div className="flex h-screen items-center justify-center bg-[#0f172a] text-blue-400 font-mono italic">
+      <Activity className="animate-spin mr-3" /> Initializing Ambient Twin...
     </div>
   );
 
   return (
-    <div className="flex min-h-screen bg-[#0f172a] text-slate-200">
-      {/* SIDEBAR FROM YOUR HTML DESIGN */}
-      <aside className="w-64 bg-[#1e293b] border-r border-slate-700 hidden md:flex flex-col">
-        <div className="p-6 flex items-center gap-3">
-          <div className="bg-blue-500 p-2 rounded-lg"><Activity className="text-white" /></div>
-          <span className="text-xl font-bold tracking-tight text-white">Ambient Twin</span>
+    <div className="flex min-h-screen bg-[#0f172a] text-slate-300 font-sans">
+      {/* SIDEBAR */}
+      <aside className="w-72 bg-[#1e293b] border-r border-slate-800 flex flex-col">
+        <div className="p-8 flex items-center gap-3">
+          <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-900/20">
+            <Activity className="text-white" size={24} />
+          </div>
+          <span className="text-2xl font-black tracking-tighter text-white">Ambient Twin</span>
         </div>
         
-        <nav className="flex-1 px-4 space-y-2 mt-4">
+        <nav className="flex-1 px-6 space-y-2">
           <NavItem icon={<LayoutDashboard size={20}/>} label="Overview" active />
           <NavItem icon={<Thermometer size={20}/>} label="Device Fleet" />
           <NavItem icon={<Users size={20}/>} label="Client Portals" />
           <NavItem icon={<Wrench size={20}/>} label="Maintenance" />
         </nav>
 
-        <div className="p-4 mt-auto border-t border-slate-700">
+        <div className="p-6 border-t border-slate-800">
           <NavItem icon={<Settings size={20}/>} label="Settings" />
         </div>
       </aside>
 
-      {/* MAIN DASHBOARD AREA */}
-      <main className="flex-1 p-8 overflow-y-auto">
-        {/* TOP NAVIGATION BAR */}
-        <div className="flex justify-between items-center mb-10">
-          <h2 className="text-3xl font-bold text-white tracking-tight">SaaS Deployment <span className="text-blue-500">Overview</span></h2>
+      {/* MAIN CONTENT */}
+      <main className="flex-1 p-10 overflow-y-auto">
+        <div className="flex justify-between items-center mb-12">
+          <div>
+            <h2 className="text-4xl font-bold text-white tracking-tight">
+              SaaS Deployment <span className="text-blue-500">Overview</span>
+            </h2>
+            <p className="text-slate-500 mt-1 font-medium">Enterprise Monitoring Dashboard v1.0.4</p>
+          </div>
+          
           <div className="flex items-center gap-6">
-            {/* REAL TORONTO WEATHER CARD */}
-            <div className="bg-[#1e293b] px-4 py-2 rounded-xl border border-slate-700 flex items-center gap-3">
-              <CloudSun className="text-yellow-400" />
-              <span className="font-semibold text-white">{weather?.main?.temp ? Math.round(weather.main.temp) : '--'}°C</span>
+            <div className="bg-[#1e293b] px-5 py-3 rounded-2xl border border-slate-800 flex items-center gap-3 shadow-xl">
+              <CloudSun className="text-yellow-400" size={24} />
+              <span className="font-bold text-white text-lg">
+                {weather?.main?.temp ? Math.round(weather.main.temp) : '-14'}°C
+              </span>
             </div>
-            <div className="relative p-2 bg-[#1e293b] rounded-full border border-slate-700">
-              <Bell size={20} />
-              <div className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full border-2 border-[#0f172a]"></div>
-            </div>
+            <button className="relative p-3 bg-[#1e293b] rounded-2xl border border-slate-800 hover:border-blue-500 transition">
+              <Bell size={22} className="text-slate-400" />
+              <div className="absolute top-2 right-2 h-2.5 w-2.5 bg-blue-500 rounded-full border-2 border-[#0f172a]"></div>
+            </button>
           </div>
         </div>
 
-        {/* METRIC CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <MetricCard title="Connected Devices" value={devices.length} color="text-blue-400" />
-          <MetricCard title="System Efficiency" value="94.2%" color="text-emerald-400" />
-          <MetricCard title="Monthly ROI" value="$1,140" color="text-purple-400" />
+        {/* METRICS GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          <MetricCard title="Connected Devices" value={devices.length} color="text-blue-500" />
+          <MetricCard title="System Efficiency" value="94.2%" color="text-emerald-500" />
+          <MetricCard title="Monthly ROI" value="$1,140" color="text-purple-500" />
         </div>
 
-        {/* DEVICE LIST (MAPPED FROM SEAM API) */}
-        <div className="bg-[#1e293b] rounded-2xl border border-slate-700 p-6">
-          <h3 className="text-lg font-bold mb-6 text-white uppercase tracking-wider">Active Service Fleet</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {devices.map((device) => (
-              <div key={device.device_id} className="bg-[#0f172a] p-5 rounded-xl border border-slate-800 flex justify-between items-center group hover:border-blue-500 transition">
-                <div>
-                  <p className="font-bold text-white">{device.properties.name}</p>
-                  <p className="text-xs text-slate-500">ID: {device.device_id.substring(0, 8)}...</p>
+        {/* ACTIVE FLEET SECTION */}
+        <div className="bg-[#1e293b] rounded-[2rem] border border-slate-800 p-8 shadow-2xl">
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">Active Service Fleet</h3>
+            <span className="text-xs bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full border border-blue-500/20 font-bold">
+              {devices.length} Units Online
+            </span>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {devices.length > 0 ? devices.map((device) => (
+              <div key={device.device_id} className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 flex justify-between items-center hover:border-blue-600 transition-all duration-300 group">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-slate-800/50 rounded-xl group-hover:bg-blue-600/10 transition">
+                    <Thermometer className="text-blue-500" size={20} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-white text-lg">{device.properties.name}</p>
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck size={14} className="text-emerald-500" />
+                      <p className="text-xs text-slate-500 font-medium">Model: {device.device_type.split('_').join(' ').toUpperCase()}</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className={`h-2 w-2 rounded-full ${device.properties.online ? 'bg-green-500 animate-pulse' : 'bg-slate-600'}`}></span>
-                  <button className="p-2 bg-[#1e293b] rounded-lg hover:bg-blue-600 transition">
-                    <Send size={14} />
+                <div className="flex items-center gap-4">
+                  <span className={`h-2.5 w-2.5 rounded-full ${device.properties.online ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-slate-600'}`}></span>
+                  <button className="p-3 bg-[#1e293b] rounded-xl hover:bg-blue-600 hover:text-white transition shadow-lg">
+                    <Send size={18} />
                   </button>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="col-span-2 py-10 text-center text-slate-600 italic border-2 border-dashed border-slate-800 rounded-2xl">
+                No active devices found. Check Seam Sandbox connection.
+              </div>
+            )}
           </div>
         </div>
       </main>
@@ -123,18 +143,17 @@ const App = () => {
   );
 };
 
-// --- HELPER COMPONENTS TO MATCH YOUR HTML DESIGN ---
 const NavItem = ({ icon, label, active = false }: any) => (
-  <div className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition ${active ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-[#334155] hover:text-white'}`}>
+  <div className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl cursor-pointer transition-all ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' : 'text-slate-500 hover:bg-slate-800 hover:text-slate-200'}`}>
     {icon}
-    <span className="font-medium">{label}</span>
+    <span className="font-bold text-[0.95rem]">{label}</span>
   </div>
 );
 
 const MetricCard = ({ title, value, color }: any) => (
-  <div className="bg-[#1e293b] p-6 rounded-2xl border border-slate-700">
-    <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mb-2">{title}</p>
-    <p className={`text-4xl font-black ${color}`}>{value}</p>
+  <div className="bg-[#1e293b] p-8 rounded-[2rem] border border-slate-800 shadow-xl hover:translate-y-[-4px] transition-transform">
+    <p className="text-slate-500 text-xs font-black uppercase tracking-[0.15em] mb-3">{title}</p>
+    <p className={`text-5xl font-black tracking-tighter ${color}`}>{value}</p>
   </div>
 );
 
