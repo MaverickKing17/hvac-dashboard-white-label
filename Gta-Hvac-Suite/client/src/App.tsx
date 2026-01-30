@@ -1,125 +1,200 @@
-// This code replaces the placeholders for Lead Pipeline and System Config
-// and integrates with your Supabase/Seam environment variables.
+import React, { useState, useEffect } from 'react';
+import { 
+  LayoutDashboard, Users, CreditCard, Settings, Zap, TrendingUp, CloudSun, 
+  Activity, MapPin, CheckCircle2, AlertTriangle, ChevronRight, 
+  BrainCircuit, ShieldCheck, Globe, Thermometer, Server
+} from 'lucide-react';
 
-const LeadPipeline = ({ devices }: { devices: any[] }) => {
-  return (
-    <div className="animate-in fade-in slide-in-from-right-10 duration-700">
-      <div className="flex justify-between items-end mb-10">
-        <div>
-          <h2 className="text-4xl font-black text-white tracking-tighter uppercase">Market Pipeline</h2>
-          <p className="text-slate-500 font-medium">AI-generated leads from connected thermostat fleet.</p>
-        </div>
-        <button className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-2xl font-bold text-sm transition-all shadow-lg shadow-blue-600/20">
-          + Manual Lead Entry
-        </button>
-      </div>
+const App = () => {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [weather, setWeather] = useState<any>(null);
+  const [devices, setDevices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* LEAD CARD 1: THE REBATE TARGET */}
-        <div className="bg-slate-900/40 border border-white/5 p-6 rounded-[2rem] hover:border-emerald-500/50 transition-all group">
-          <div className="flex justify-between mb-4">
-            <span className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black px-2 py-1 rounded-full">ENBRIDGE ELIGIBLE</span>
-            <span className="text-slate-500 text-[10px] font-bold">Ref: #GTA-9921</span>
-          </div>
-          <h3 className="text-xl font-bold text-white mb-1">Old Mill Residential</h3>
-          <p className="text-xs text-slate-400 mb-6 flex items-center gap-1"><MapPin size={12}/> Etobicoke, ON</p>
-          
-          <div className="space-y-3 mb-6">
-            <div className="flex justify-between text-xs">
-              <span className="text-slate-500 font-bold">System Health</span>
-              <span className="text-orange-400 font-black">Degrading (62%)</span>
-            </div>
-            <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-orange-400 h-full w-[62%]"></div>
-            </div>
-          </div>
+  // 2026 Grid Logic State
+  const [truckRollCost, setTruckRollCost] = useState(250);
 
-          <div className="bg-slate-800/50 p-4 rounded-2xl mb-6">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">AI Opportunity</p>
-            <p className="text-xs text-white leading-relaxed font-medium">Unit qualifies for <span className="text-emerald-400">$6,500 Grant</span>. Estimated ROI: 18 months.</p>
-          </div>
-          
-          <button className="w-full py-4 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-            Contact Owner
-          </button>
-        </div>
+  useEffect(() => {
+    const fetchLiveData = async () => {
+      try {
+        // 1. Weather (Toronto Focus)
+        const wRes = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?q=Toronto,ca&units=metric&appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`
+        );
+        setWeather(await wRes.json());
 
-        {/* LEAD CARD 2: THE EMERGENCY UPSELL */}
-        <div className="bg-slate-900/40 border border-white/5 p-6 rounded-[2rem] hover:border-blue-500/50 transition-all group">
-          <div className="flex justify-between mb-4">
-            <span className="bg-blue-500/10 text-blue-500 text-[10px] font-black px-2 py-1 rounded-full">PREDICTIVE FAIL</span>
-            <span className="text-slate-500 text-[10px] font-bold">Ref: #GTA-1104</span>
-          </div>
-          <h3 className="text-xl font-bold text-white mb-1">Leaside Modern</h3>
-          <p className="text-xs text-slate-400 mb-6 flex items-center gap-1"><MapPin size={12}/> North York, ON</p>
-          
-          <div className="space-y-3 mb-6">
-            <div className="flex justify-between text-xs">
-              <span className="text-slate-500 font-bold">API Diagnostic</span>
-              <span className="text-blue-400 font-black">Igniter Latency High</span>
-            </div>
-            <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-blue-500 h-full w-[88%]"></div>
-            </div>
-          </div>
+        // 2. Seam API (Honeywell/Nest/Ecobee)
+        const sRes = await fetch('https://connect.getseam.com/devices/list', {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${import.meta.env.VITE_SEAM_API_KEY}`, 
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify({}),
+        });
+        const sData = await sRes.json();
+        setDevices(sData.devices || []);
+      } catch (err) {
+        console.error("Vercel Sync Error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLiveData();
+  }, []);
 
-          <button className="w-full py-4 border border-white/10 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white hover:text-slate-900 transition-all">
-            Open Diagnostics
-          </button>
-        </div>
-      </div>
+  if (loading) return (
+    <div className="h-screen bg-[#020617] flex items-center justify-center">
+      <BrainCircuit className="text-blue-500 animate-pulse" size={48} />
     </div>
   );
-};
 
-const SystemConfig = () => {
   return (
-    <div className="max-w-4xl animate-in fade-in slide-in-from-bottom-10 duration-700">
-      <h2 className="text-4xl font-black text-white tracking-tighter uppercase mb-2">Partner Branding</h2>
-      <p className="text-slate-500 font-medium mb-12">Configure your white-label settings and GTA market defaults.</p>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-        <div className="space-y-8">
-          <ConfigInput label="Shop Name" placeholder="Toronto HVAC Solutions" />
-          <ConfigInput label="Seam API Key (Vercel Managed)" placeholder="••••••••••••••••" disabled />
-          <ConfigInput label="Toronto Service Radius (km)" placeholder="50" />
+    <div className="flex min-h-screen bg-[#020617] text-slate-200 font-sans selection:bg-blue-500/30">
+      
+      {/* SIDEBAR */}
+      <aside className="w-72 bg-slate-900/50 backdrop-blur-xl border-r border-white/5 flex flex-col fixed h-full z-20">
+        <div className="p-8">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2.5 rounded-2xl">
+              <BrainCircuit className="text-white" size={24} />
+            </div>
+            <h1 className="text-xl font-black text-white">AMBIENT<span className="text-blue-500">TWIN</span></h1>
+          </div>
+          <nav className="space-y-1">
+            <SidebarItem icon={<LayoutDashboard size={18} />} label="Command Center" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
+            <SidebarItem icon={<Users size={18} />} label="Lead Pipeline" active={activeTab === 'leads'} onClick={() => setActiveTab('leads')} />
+            <SidebarItem icon={<CreditCard size={18} />} label="Plans & ROI" active={activeTab === 'pricing'} onClick={() => setActiveTab('pricing')} />
+            <SidebarItem icon={<Settings size={18} />} label="System Config" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+          </nav>
         </div>
+      </aside>
 
-        <div className="space-y-8">
-           <div className="bg-slate-900/40 border border-white/5 p-8 rounded-[2.5rem]">
-              <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em] mb-6">Market ROI Logic</h3>
-              <div className="space-y-6">
-                <div>
-                  <label className="text-[10px] font-bold text-white uppercase block mb-3">Avg. GTA Truck Roll Cost (CAD)</label>
-                  <input type="range" className="w-full accent-blue-500" min="150" max="450" defaultValue="250" />
-                  <div className="flex justify-between text-[10px] font-bold text-slate-500 mt-2">
-                    <span>$150</span>
-                    <span className="text-blue-500">$250</span>
-                    <span>$450</span>
-                  </div>
-                </div>
+      {/* MAIN CONTENT */}
+      <main className="flex-1 ml-72 p-10 overflow-y-auto relative">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 blur-[120px] rounded-full -z-10"></div>
+        
+        {/* DASHBOARD VIEW */}
+        {activeTab === 'dashboard' && (
+          <div className="animate-in fade-in duration-700">
+            <header className="flex justify-between items-center mb-12">
+              <div>
+                <h2 className="text-4xl font-black text-white tracking-tighter uppercase">GTA Command</h2>
+                <p className="text-slate-500 text-sm mt-1 flex items-center gap-2"><MapPin size={14}/> Active Service Area: Toronto/GTA</p>
               </div>
-           </div>
-        </div>
-      </div>
+              <div className="bg-slate-800/40 p-4 rounded-3xl border border-white/5 flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-[10px] font-bold text-slate-500">PEARSON YYZ</p>
+                  <p className="text-xl font-black text-white">{weather?.main?.temp ? Math.round(weather.main.temp) : '--'}°C</p>
+                </div>
+                <CloudSun className="text-yellow-400" size={32} />
+              </div>
+            </header>
 
-      <div className="mt-12 pt-12 border-t border-white/5">
-        <button className="px-10 py-5 bg-blue-600 rounded-2xl text-white font-black text-xs uppercase tracking-[0.2em] hover:bg-blue-500 transition-all">
-          Sync Configuration
-        </button>
-      </div>
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-10">
+              <StatCard title="Active Twins" value={devices.length} icon={<Globe className="text-blue-500"/>} />
+              <StatCard title="Grid Stress" value="62%" icon={<Zap className="text-yellow-500"/>} />
+              <StatCard title="Rebate Funnel" value="$12.4k" icon={<TrendingUp className="text-emerald-500"/>} />
+              <StatCard title="AI Diagnostic" value="9" icon={<Activity className="text-purple-500"/>} />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 space-y-4 bg-slate-900/40 p-8 rounded-[2.5rem] border border-white/5">
+                <h3 className="font-bold text-white mb-4">Predictive Diagnostics (Seam API)</h3>
+                {devices.map(d => (
+                  <AgenticAlert key={d.device_id} unit={d.properties?.name || 'Unknown Unit'} status="Online" confidence="98%" />
+                ))}
+              </div>
+              <div className="bg-blue-900/10 p-8 rounded-[2.5rem] border border-blue-500/20">
+                <h3 className="font-bold text-white mb-6 uppercase text-sm tracking-widest">Enbridge HER+ Grant Pipeline</h3>
+                <RebateProgress label="Audit Phase" value={70} count="18" />
+                <RebateProgress label="Install" value={30} count="8" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* LEAD PIPELINE VIEW */}
+        {activeTab === 'leads' && (
+          <div className="animate-in fade-in duration-500">
+            <h2 className="text-3xl font-black text-white mb-8 uppercase italic">AI Lead Generation</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <LeadCard title="Etobicoke Residential" status="ENBRIDGE ELIGIBLE" impact="High Priority" />
+              <LeadCard title="North York Condo" status="PREDICTIVE FAIL" impact="Medium Priority" />
+            </div>
+          </div>
+        )}
+
+        {/* SETTINGS VIEW */}
+        {activeTab === 'settings' && (
+          <div className="animate-in fade-in duration-500">
+            <h2 className="text-3xl font-black text-white mb-8 uppercase italic">System Config</h2>
+            <div className="max-w-xl space-y-6">
+               <ConfigInput label="Shop Name" value="Toronto HVAC Solutions" />
+               <ConfigInput label="Truck Roll Cost (CAD)" value={`$${truckRollCost}`} />
+               <button className="bg-blue-600 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-white">Save Configuration</button>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 };
 
-const ConfigInput = ({ label, placeholder, disabled = false }: any) => (
-  <div>
-    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">{label}</label>
-    <input 
-      type="text" 
-      disabled={disabled}
-      className={`w-full bg-slate-900/50 border border-white/10 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-blue-500 transition-all ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-      placeholder={placeholder} 
-    />
+// HELPER COMPONENTS
+const SidebarItem = ({ icon, label, active, onClick }: any) => (
+  <div onClick={onClick} className={`flex items-center gap-4 px-5 py-4 rounded-2xl cursor-pointer transition-all ${active ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'text-slate-500 hover:text-white'}`}>
+    {icon} <span className="font-bold text-sm tracking-tight">{label}</span>
   </div>
 );
+
+const StatCard = ({ title, value, icon }: any) => (
+  <div className="bg-slate-900/40 p-6 rounded-[2rem] border border-white/5 shadow-xl">
+    <div className="p-2 bg-slate-800 w-fit rounded-lg mb-4">{icon}</div>
+    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{title}</p>
+    <p className="text-3xl font-black text-white mt-1">{value}</p>
+  </div>
+);
+
+const AgenticAlert = ({ unit, status, confidence }: any) => (
+  <div className="flex items-center justify-between p-4 bg-slate-800/30 rounded-2xl border border-white/5">
+    <div className="flex items-center gap-4">
+      <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
+      <div>
+        <p className="font-bold text-white text-sm">{unit}</p>
+        <p className="text-[10px] text-slate-500 uppercase tracking-tighter">Status: {status}</p>
+      </div>
+    </div>
+    <span className="text-xs font-bold text-blue-400 italic">AI Confidence: {confidence}</span>
+  </div>
+);
+
+const RebateProgress = ({ label, value, count }: any) => (
+  <div className="mb-6">
+    <div className="flex justify-between text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">
+      <span>{label}</span>
+      <span>{count} Units</span>
+    </div>
+    <div className="h-1.5 w-full bg-slate-800 rounded-full">
+      <div className="h-full bg-blue-500 rounded-full" style={{ width: `${value}%` }}></div>
+    </div>
+  </div>
+);
+
+const LeadCard = ({ title, status, impact }: any) => (
+  <div className="bg-slate-900/40 p-8 rounded-[2.5rem] border border-white/5 hover:border-blue-500/50 transition-all cursor-pointer">
+    <span className="bg-blue-500/10 text-blue-500 text-[10px] font-black px-3 py-1 rounded-full mb-4 inline-block">{status}</span>
+    <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+    <p className="text-xs text-slate-500 mb-6 font-medium italic">Impact Score: {impact}</p>
+    <button className="w-full py-4 bg-white text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest">Open Lead Profile</button>
+  </div>
+);
+
+const ConfigInput = ({ label, value }: any) => (
+  <div>
+    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">{label}</label>
+    <input type="text" readOnly value={value} className="w-full bg-slate-900/50 border border-white/10 rounded-2xl px-5 py-4 text-white text-sm outline-none" />
+  </div>
+);
+
+export default App;
