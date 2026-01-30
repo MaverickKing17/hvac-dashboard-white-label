@@ -9,8 +9,10 @@ import {
   CloudSun, 
   Activity,
   MapPin,
-  CheckCircle2,
-  AlertTriangle
+  Check,
+  Shield,
+  HelpCircle,
+  Server
 } from 'lucide-react';
 
 // --- DATA TYPES ---
@@ -26,9 +28,10 @@ interface Lead {
 
 const App = () => {
   // --- STATE ---
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('pricing'); // Default to pricing to show your new work
   const [weather, setWeather] = useState<any>(null);
   const [devices, setDevices] = useState<any[]>([]);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   
   // ROI Calculator State
   const [truckRollCost, setTruckRollCost] = useState(250);
@@ -70,7 +73,7 @@ const App = () => {
   }, []);
 
   // --- CALCULATIONS ---
-  const potentialSavings = Math.round((truckRollCost * 2) + (energyWaste * 0.20)); // Demo Logic
+  const potentialSavings = Math.round((truckRollCost * 2) + (energyWaste * 0.20)); 
 
   // --- COMPONENT RENDER ---
   return (
@@ -110,7 +113,7 @@ const App = () => {
       </aside>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 ml-72 p-8 overflow-y-auto">
+      <main className="flex-1 ml-72 p-8 overflow-y-auto min-h-screen">
         
         {/* VIEW: DASHBOARD */}
         {activeTab === 'dashboard' && (
@@ -282,6 +285,119 @@ const App = () => {
           </div>
         )}
 
+        {/* VIEW: PRICING & PLANS (NEW & COMPLETE) */}
+        {activeTab === 'pricing' && (
+           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+             
+             {/* HEADER */}
+             <div className="text-center max-w-2xl mx-auto mb-12">
+               <h2 className="text-4xl font-black text-white tracking-tight mb-4">
+                 Scale Your HVAC Business
+               </h2>
+               <p className="text-slate-400 text-lg">
+                 Choose the right plan to manage your GTA fleet, automate Enbridge rebates, and reduce truck rolls.
+               </p>
+               
+               {/* TOGGLE SWITCH */}
+               <div className="flex items-center justify-center gap-4 mt-8">
+                 <span className={`text-sm font-bold ${billingCycle === 'monthly' ? 'text-white' : 'text-slate-500'}`}>Monthly</span>
+                 <button 
+                   onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
+                   className="w-14 h-8 bg-blue-600/20 border border-blue-500/50 rounded-full relative transition-colors hover:border-blue-500"
+                 >
+                   <div className={`absolute top-1 bottom-1 w-6 bg-blue-500 rounded-full transition-all duration-300 ${billingCycle === 'yearly' ? 'left-7' : 'left-1'}`}></div>
+                 </button>
+                 <span className={`text-sm font-bold ${billingCycle === 'yearly' ? 'text-white' : 'text-slate-500'}`}>
+                   Yearly <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full ml-1">SAVE 20%</span>
+                 </span>
+               </div>
+             </div>
+
+             {/* PRICING GRID */}
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+               
+               {/* PLAN 1: STARTER */}
+               <div className="bg-[#0f172a] rounded-3xl p-8 border border-slate-800 hover:border-slate-600 transition flex flex-col">
+                 <div className="mb-6">
+                   <h3 className="text-lg font-bold text-white">Technician Starter</h3>
+                   <p className="text-sm text-slate-400 mt-1">Perfect for independent contractors in the GTA.</p>
+                 </div>
+                 <div className="mb-8">
+                   <span className="text-4xl font-black text-white">${billingCycle === 'monthly' ? '149' : '119'}</span>
+                   <span className="text-slate-500 font-medium">/mo (CAD)</span>
+                 </div>
+                 <div className="flex-1 space-y-4 mb-8">
+                   <Feature text="Up to 50 Connected Devices" />
+                   <Feature text="Basic Health Monitoring" />
+                   <Feature text="Email Support (9-5 EST)" />
+                   <Feature text="Mobile App Access" />
+                   <Feature text="Manual Rebate Forms" />
+                 </div>
+                 <button className="w-full py-4 rounded-xl border border-slate-700 text-white font-bold hover:bg-slate-800 transition">
+                   Start Free Trial
+                 </button>
+               </div>
+
+               {/* PLAN 2: GROWTH (HIGHLIGHTED) */}
+               <div className="bg-[#1e293b] rounded-3xl p-8 border-2 border-blue-600 shadow-2xl shadow-blue-900/20 relative flex flex-col transform md:-translate-y-4">
+                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider">
+                   Most Popular
+                 </div>
+                 <div className="mb-6">
+                   <h3 className="text-lg font-bold text-white text-blue-400">Metro Scale</h3>
+                   <p className="text-sm text-slate-300 mt-1">For growing teams managing residential fleets.</p>
+                 </div>
+                 <div className="mb-8">
+                   <span className="text-5xl font-black text-white">${billingCycle === 'monthly' ? '399' : '319'}</span>
+                   <span className="text-slate-400 font-medium">/mo (CAD)</span>
+                 </div>
+                 <div className="flex-1 space-y-4 mb-8">
+                   <Feature text="Up to 500 Connected Devices" highlighted />
+                   <Feature text="Real-time Seam API Access" highlighted />
+                   <Feature text="Lead Manager (Rebate Data)" highlighted />
+                   <Feature text="Auto-fill Enbridge Forms" />
+                   <Feature text="Priority Phone Support" />
+                   <Feature text="TSSA Compliance Logs" />
+                 </div>
+                 <button className="w-full py-4 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition shadow-lg shadow-blue-900/50">
+                   Get Started
+                 </button>
+               </div>
+
+               {/* PLAN 3: ENTERPRISE */}
+               <div className="bg-[#0f172a] rounded-3xl p-8 border border-slate-800 hover:border-slate-600 transition flex flex-col">
+                 <div className="mb-6">
+                   <h3 className="text-lg font-bold text-white">Utility Partner</h3>
+                   <p className="text-sm text-slate-400 mt-1">Full-scale deployment for utilities & enterprises.</p>
+                 </div>
+                 <div className="mb-8">
+                   <span className="text-4xl font-black text-white">Custom</span>
+                 </div>
+                 <div className="flex-1 space-y-4 mb-8">
+                   <Feature text="Unlimited Devices" />
+                   <Feature text="White-label Dashboard" />
+                   <Feature text="IESO Grid Integration" />
+                   <Feature text="Dedicated Account Manager" />
+                   <Feature text="On-premise Deployment" />
+                   <Feature text="Custom API Endpoints" />
+                 </div>
+                 <button className="w-full py-4 rounded-xl border border-slate-700 text-white font-bold hover:bg-slate-800 transition">
+                   Contact Sales
+                 </button>
+               </div>
+
+             </div>
+
+             {/* TRUST FOOTER */}
+             <div className="mt-16 border-t border-slate-800 pt-10 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+               <TrustItem label="Secure Data" sub="SOC2 Compliant" icon={<Shield size={20} className="mx-auto mb-2 text-emerald-500" />} />
+               <TrustItem label="Local Support" sub="Based in Toronto" icon={<MapPin size={20} className="mx-auto mb-2 text-blue-500" />} />
+               <TrustItem label="Grid Ready" sub="IESO Connected" icon={<Zap size={20} className="mx-auto mb-2 text-yellow-500" />} />
+               <TrustItem label="High Uptime" sub="99.9% SLA" icon={<Server size={20} className="mx-auto mb-2 text-purple-500" />} />
+             </div>
+           </div>
+        )}
+
         {/* VIEW: SETTINGS */}
         {activeTab === 'settings' && (
           <div className="max-w-4xl animate-in fade-in duration-500">
@@ -332,7 +448,8 @@ const App = () => {
   );
 };
 
-// HELPER: Sidebar Item
+// --- SUBCOMPONENTS ---
+
 const SidebarItem = ({ icon, label, active, onClick }: any) => (
   <div 
     onClick={onClick}
@@ -340,6 +457,23 @@ const SidebarItem = ({ icon, label, active, onClick }: any) => (
   >
     {React.cloneElement(icon, { size: 18, className: active ? 'text-white' : 'text-slate-400 group-hover:text-slate-200' })}
     <span className="text-sm font-medium">{label}</span>
+  </div>
+);
+
+const Feature = ({ text, highlighted = false }: { text: string, highlighted?: boolean }) => (
+  <div className="flex items-start gap-3">
+    <div className={`mt-1 p-0.5 rounded-full ${highlighted ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-400'}`}>
+      <Check size={12} strokeWidth={4} />
+    </div>
+    <span className={`text-sm ${highlighted ? 'text-white font-medium' : 'text-slate-400'}`}>{text}</span>
+  </div>
+);
+
+const TrustItem = ({ label, sub, icon }: any) => (
+  <div>
+    {icon}
+    <p className="font-bold text-white text-sm">{label}</p>
+    <p className="text-xs text-slate-500">{sub}</p>
   </div>
 );
 
