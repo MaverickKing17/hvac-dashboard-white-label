@@ -1,493 +1,244 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  LayoutDashboard, 
-  Users, 
-  CreditCard, 
-  Settings, 
-  Zap, 
-  TrendingUp, 
-  CloudSun, 
-  Activity,
-  MapPin,
-  Check,
-  Shield,
-  HelpCircle,
-  Server
+  LayoutDashboard, Users, CreditCard, Settings, Zap, TrendingUp, CloudSun, 
+  Activity, MapPin, CheckCircle2, AlertTriangle, ChevronRight, 
+  BrainCircuit, Gauge, ShieldCheck, Globe
 } from 'lucide-react';
 
-// --- DATA TYPES ---
-interface Lead {
-  id: string;
-  name: string;
-  address: string;
-  territory: string;
-  unit: string;
-  riskScore: number;
-  status: 'New' | 'Scheduled' | 'Contacted';
-}
-
 const App = () => {
-  // --- STATE ---
-  const [activeTab, setActiveTab] = useState('pricing'); // Default to pricing to show your new work
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [weather, setWeather] = useState<any>(null);
   const [devices, setDevices] = useState<any[]>([]);
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
-  
-  // ROI Calculator State
-  const [truckRollCost, setTruckRollCost] = useState(250);
-  const [energyWaste, setEnergyWaste] = useState(1200);
+  const [gridStress, setGridStress] = useState(68); // 2026 Grid Predictive Logic
 
-  // Leads Data (Hardcoded for Demo)
-  const leads: Lead[] = [
-    { id: '1', name: 'Fairview Mall Complex', address: '1800 Sheppard Ave E, North York', territory: 'Scarborough-South', unit: 'Trane IntelliPak', riskScore: 85, status: 'New' },
-    { id: '2', name: 'Vaughan Mills Retail', address: '1 Bass Pro Mills Dr, Vaughan', territory: 'Vaughan-East', unit: 'Carrier Weathermaster', riskScore: 45, status: 'Scheduled' },
-    { id: '3', name: 'RBC Plaza', address: '200 Bay St, Toronto', territory: 'Downtown Core', unit: 'Daikin Rebel', riskScore: 12, status: 'Contacted' },
-  ];
-
-  // --- API FETCHING ---
   useEffect(() => {
     const fetchLiveData = async () => {
       try {
-        // 1. Weather
-        const weatherRes = await fetch(
-          `https://api.openweathermap.org/data/2.5/weather?q=Toronto,ca&units=metric&appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`
-        );
-        setWeather(await weatherRes.json());
-
-        // 2. Seam Devices
-        const seamRes = await fetch('https://connect.getseam.com/devices/list', {
+        const wRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Toronto,ca&units=metric&appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`);
+        setWeather(await wRes.json());
+        const sRes = await fetch('https://connect.getseam.com/devices/list', {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SEAM_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Authorization': `Bearer ${import.meta.env.VITE_SEAM_API_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({}),
         });
-        const seamData = await seamRes.json();
-        setDevices(seamData.devices || []);
-      } catch (err) {
-        console.error("API Sync Error", err);
-      }
+        const sData = await sRes.json();
+        setDevices(sData.devices || []);
+      } catch (err) { console.error("Sync Error", err); }
     };
     fetchLiveData();
   }, []);
 
-  // --- CALCULATIONS ---
-  const potentialSavings = Math.round((truckRollCost * 2) + (energyWaste * 0.20)); 
-
-  // --- COMPONENT RENDER ---
   return (
-    <div className="flex min-h-screen bg-[#020617] text-slate-200 font-sans selection:bg-blue-500/30">
+    <div className="flex min-h-screen bg-[#020617] text-slate-200 font-sans selection:bg-blue-500/30 overflow-hidden">
       
-      {/* SIDEBAR NAVIGATION */}
-      <aside className="w-72 bg-[#0f172a] border-r border-slate-800 flex flex-col fixed h-full z-10">
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="bg-blue-600 p-2 rounded-lg">
-              <Activity className="text-white" size={20} />
+      {/* 2. SPATIAL UI: SIDEBAR */}
+      <aside className="w-72 bg-slate-900/50 backdrop-blur-xl border-r border-white/5 flex flex-col fixed h-full z-20">
+        <div className="p-8">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2.5 rounded-2xl shadow-lg shadow-blue-500/20">
+              <BrainCircuit className="text-white" size={24} />
             </div>
-            <div>
-              <h1 className="font-bold text-white leading-none">Toronto HVAC</h1>
-              <span className="text-[10px] text-blue-400 font-bold tracking-wider uppercase">Solutions</span>
-            </div>
+            <h1 className="text-xl font-black tracking-tighter text-white">AMBIENT<span className="text-blue-500">TWIN</span></h1>
           </div>
-          <p className="text-[10px] text-slate-500 mt-2 font-mono pl-1">GTA-HVAC EDITION</p>
+          
+          <nav className="space-y-1">
+            <SidebarItem icon={<LayoutDashboard size={18} />} label="Command Center" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
+            <SidebarItem icon={<Users size={18} />} label="Lead Pipeline" active={activeTab === 'leads'} onClick={() => setActiveTab('leads')} />
+            <SidebarItem icon={<CreditCard size={18} />} label="Plans & ROI" active={activeTab === 'pricing'} onClick={() => setActiveTab('pricing')} />
+            <SidebarItem icon={<Settings size={18} />} label="System Config" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+          </nav>
         </div>
 
-        <nav className="flex-1 px-4 space-y-1 mt-4">
-          <SidebarItem icon={<LayoutDashboard size={18} />} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
-          <SidebarItem icon={<Users size={18} />} label="Lead Manager" active={activeTab === 'leads'} onClick={() => setActiveTab('leads')} />
-          <SidebarItem icon={<CreditCard size={18} />} label="Pricing & Plans" active={activeTab === 'pricing'} onClick={() => setActiveTab('pricing')} />
-          <SidebarItem icon={<Settings size={18} />} label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
-        </nav>
-
-        {/* SYSTEM STATUS FOOTER */}
-        <div className="p-4 m-4 bg-[#1e293b] rounded-xl border border-slate-700/50">
-          <div className="flex items-center gap-2 mb-2">
-            <div className={`h-2 w-2 rounded-full ${devices.length > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></div>
-            <span className="text-xs font-bold text-slate-300">System Online</span>
+        <div className="mt-auto p-6">
+          <div className="bg-blue-600/10 border border-blue-500/20 rounded-2xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Agentic Sync</span>
+              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed font-medium">AI is currently scanning 12 units in <span className="text-white">North York</span> for capacitor degradation.</p>
           </div>
-          <p className="text-[10px] text-slate-500">Connected to GTA Grid (IESO)</p>
-          <p className="text-[10px] text-slate-500">Latency: 12ms</p>
         </div>
       </aside>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 ml-72 p-8 overflow-y-auto min-h-screen">
+      <main className="flex-1 ml-72 p-10 overflow-y-auto relative">
+        {/* Background Ambient Glows */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 blur-[120px] rounded-full -z-10"></div>
         
-        {/* VIEW: DASHBOARD */}
         {activeTab === 'dashboard' && (
-          <div className="animate-in fade-in duration-500">
-            <header className="mb-10 flex justify-between items-end">
+          <div className="max-w-7xl mx-auto animate-in fade-in duration-700">
+            {/* 1. AGENTIC TOP BAR */}
+            <header className="flex justify-between items-center mb-12">
               <div>
-                <h2 className="text-3xl font-bold text-white tracking-tight">Operational Overview</h2>
-                <p className="text-slate-400 mt-2">Welcome back. Here's your GTA market performance.</p>
+                <h2 className="text-4xl font-black text-white tracking-tighter">GTA COMMAND</h2>
+                <div className="flex items-center gap-4 mt-2">
+                  <span className="text-slate-500 text-sm flex items-center gap-1"><MapPin size={14}/> Toronto Grid Active</span>
+                  <span className="text-emerald-500 text-sm font-bold flex items-center gap-1"><ShieldCheck size={14}/> IESO Verified</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
-                <span className="text-xs font-medium text-emerald-400">Grid Status: Normal</span>
+
+              <div className="flex gap-4">
+                <div className="bg-slate-800/40 backdrop-blur-md border border-white/5 p-4 rounded-3xl flex items-center gap-4 shadow-2xl">
+                   <div className="text-right">
+                     <p className="text-[10px] font-bold text-slate-500 uppercase">Toronto Int'l (YYZ)</p>
+                     <p className="text-xl font-black text-white">{weather?.main?.temp ? Math.round(weather.main.temp) : '--'}°C</p>
+                   </div>
+                   <CloudSun className="text-yellow-400" size={32} />
+                </div>
               </div>
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
-              {/* 1. WEATHER RESPONSE CARD */}
-              <div className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
-                  <CloudSun size={100} />
-                </div>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Weather Response</h3>
-                <p className="text-sm text-slate-400 mb-1">Pearson Int'l (YYZ)</p>
-                <div className="flex items-baseline gap-2 mb-6">
-                  <span className="text-5xl font-bold text-white">
-                    {weather?.main?.temp ? Math.round(weather.main.temp) : '--'}°C
-                  </span>
-                  <span className="text-slate-400">{weather?.weather?.[0]?.main || 'Partly Cloudy'}</span>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-[#1e293b] p-3 rounded-lg border border-slate-700">
-                    <Zap size={16} className="text-yellow-500 mb-2" />
-                    <p className="text-[10px] text-slate-400 uppercase">Grid Load</p>
-                    <p className="text-sm font-bold text-white">Moderate</p>
-                  </div>
-                  <div className="bg-[#1e293b] p-3 rounded-lg border border-slate-700">
-                    <Thermometer size={16} className="text-rose-500 mb-2" />
-                    <p className="text-[10px] text-slate-400 uppercase">HVAC Impact</p>
-                    <p className="text-sm font-bold text-white">High</p>
-                  </div>
-                </div>
-              </div>
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-10">
+              {/* 3. OUTCOME STATS */}
+              <StatCard title="Grid Stress" value={`${gridStress}%`} trend="Increasing" icon={<Zap className="text-yellow-500"/>} />
+              <StatCard title="Active Digital Twins" value={devices.length} trend="+2 this week" icon={<Globe className="text-blue-500"/>} />
+              <StatCard title="Enbridge Pipeline" value="$14.2k" trend="Potential" icon={<TrendingUp className="text-emerald-500"/>} />
+              <StatCard title="AI Diagnostic Hits" value="12" trend="Verified" icon={<BrainCircuit className="text-purple-500"/>} />
+            </div>
 
-              {/* 2. GRANT ELIGIBILITY CARD */}
-              <div className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-xl">
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Grant Eligibility</h3>
-                    <p className="text-xs text-slate-500 mt-1">Enbridge / Greener Homes</p>
-                  </div>
-                  <TrendingUp className="text-emerald-500" size={20} />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* PREDICTIVE MAINTENANCE LAYER */}
+              <div className="lg:col-span-2 bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-8 shadow-2xl">
+                <div className="flex justify-between items-center mb-8">
+                  <h3 className="font-bold text-lg text-white">Agentic Diagnostics <span className="text-blue-500 text-sm ml-2">High Confidence</span></h3>
+                  <button className="text-blue-500 text-xs font-bold hover:underline">View All Units</button>
                 </div>
-
+                
                 <div className="space-y-4">
-                  <div className="p-4 bg-[#1e293b] rounded-xl border border-slate-700">
-                    <div className="flex justify-between mb-2">
-                      <span className="font-bold text-sm text-white">Enbridge Home Efficiency</span>
-                      <span className="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded font-bold">$2,400 avg</span>
-                    </div>
-                    <div className="flex justify-between text-xs text-slate-400">
-                      <span>Eligible Clients: <strong className="text-white">142</strong></span>
-                      <span>Active Apps: <strong className="text-blue-400">28</strong></span>
-                    </div>
-                  </div>
-                  
-                  <div className="p-4 bg-[#1e293b] rounded-xl border border-slate-700">
-                    <div className="flex justify-between mb-2">
-                      <span className="font-bold text-sm text-white">Canada Greener Homes</span>
-                      <span className="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded font-bold">$5,000 avg</span>
-                    </div>
-                    <div className="flex justify-between text-xs text-slate-400">
-                      <span>Eligible Clients: <strong className="text-white">89</strong></span>
-                      <span>Active Apps: <strong className="text-blue-400">15</strong></span>
-                    </div>
-                  </div>
+                  <AgenticAlert 
+                    unit="Honeywell T6 Pro - Etobicoke" 
+                    issue="Blower Motor Resistance" 
+                    confidence="94%" 
+                    action="Dispatch Tech: Order Part #8821" 
+                  />
+                  <AgenticAlert 
+                    unit="Ecobee 3 - Scarborough" 
+                    issue="Short Cycling Detected" 
+                    confidence="88%" 
+                    action="Remote Adjustment Applied" 
+                  />
                 </div>
               </div>
 
-              {/* 3. ROI INTERACTIVE CALCULATOR */}
-              <div className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">ROI Interactive Calculator</h3>
-                <p className="text-xs text-slate-500 mb-6">Estimate savings with digital twin tech</p>
-
-                <div className="space-y-6 mb-8">
-                  <div>
-                    <div className="flex justify-between text-xs mb-2">
-                      <span className="text-slate-300">Truck Roll Cost (CAD)</span>
-                      <span className="font-bold text-white">${truckRollCost}</span>
-                    </div>
-                    <input 
-                      type="range" min="100" max="500" value={truckRollCost} 
-                      onChange={(e) => setTruckRollCost(Number(e.target.value))}
-                      className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                    />
+              {/* REBATE TRACKER */}
+              <div className="bg-gradient-to-b from-slate-900/40 to-blue-900/10 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-8 shadow-2xl">
+                <h3 className="font-bold text-lg text-white mb-6">Enbridge HER+ Pipeline</h3>
+                <div className="space-y-6">
+                  <RebateProgress label="Audit Phase" value={75} count="24" />
+                  <RebateProgress label="Installation" value={40} count="12" />
+                  <RebateProgress label="Grant Disbursed" value={15} count="5" />
+                  <div className="mt-8 pt-8 border-t border-white/5 text-center">
+                    <p className="text-xs text-slate-500 uppercase font-black mb-1 tracking-widest">Total Value Secured</p>
+                    <p className="text-3xl font-black text-white">$42,500 <span className="text-sm text-emerald-500">CAD</span></p>
                   </div>
-                  <div>
-                    <div className="flex justify-between text-xs mb-2">
-                      <span className="text-slate-300">Annual Energy Waste (CAD)</span>
-                      <span className="font-bold text-white">${energyWaste}</span>
-                    </div>
-                    <input 
-                      type="range" min="500" max="5000" step="100" value={energyWaste} 
-                      onChange={(e) => setEnergyWaste(Number(e.target.value))}
-                      className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-auto bg-blue-600/10 border border-blue-500/20 p-6 rounded-xl text-center">
-                  <p className="text-xs text-blue-300 font-bold uppercase mb-1">Potential Annual Savings</p>
-                  <p className="text-4xl font-black text-white tracking-tight">${potentialSavings.toLocaleString()}</p>
-                  <p className="text-[10px] text-blue-400 mt-2 px-4 leading-relaxed">
-                    Based on 30% fewer truck rolls & 20% efficiency gain per household.
-                  </p>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* VIEW: LEAD MANAGER */}
-        {activeTab === 'leads' && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <header className="mb-8 flex justify-between items-center">
-              <div>
-                <h2 className="text-3xl font-bold text-white">Lead Manager</h2>
-                <p className="text-slate-400">Manage HVAC opportunities across the GTA.</p>
-              </div>
-              <button className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition">
-                + Add Lead
-              </button>
-            </header>
-
-            <div className="relative mb-6">
-              <input type="text" placeholder="Search by name or address..." className="w-full bg-[#0f172a] border border-slate-700 text-white rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-600 outline-none" />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {leads.map((lead) => (
-                <div key={lead.id} className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 hover:border-blue-500/50 transition group cursor-pointer">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className={`h-2 w-2 rounded-full ${lead.status === 'New' ? 'bg-red-500' : lead.status === 'Scheduled' ? 'bg-yellow-500' : 'bg-emerald-500'}`}></span>
-                    <span className="text-[10px] font-bold uppercase text-slate-400">{lead.status}</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white mb-1">{lead.name}</h3>
-                  <div className="flex items-start gap-2 text-xs text-slate-400 mb-4">
-                    <MapPin size={12} className="mt-0.5" />
-                    {lead.address}
-                  </div>
-                  
-                  <div className="space-y-2 bg-[#1e293b] p-3 rounded-xl border border-slate-700/50">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-500">Territory</span>
-                      <span className="text-blue-400 font-medium">{lead.territory}</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-500">Unit</span>
-                      <span className="text-slate-300">{lead.unit}</span>
-                    </div>
-                    <div className="flex justify-between text-xs items-center">
-                      <span className="text-slate-500">Risk Score</span>
-                      <span className={`font-bold ${lead.riskScore > 80 ? 'text-red-400' : 'text-emerald-400'}`}>{lead.riskScore}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* VIEW: PRICING & PLANS (NEW & COMPLETE) */}
+        {/* 4. PRICING: OUTCOME ORIENTED */}
         {activeTab === 'pricing' && (
-           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="animate-in slide-in-from-bottom-8 duration-700 max-w-6xl mx-auto">
+             <div className="text-center mb-16">
+               <h2 className="text-5xl font-black text-white mb-4 tracking-tighter">2026 FLEET TIERS</h2>
+               <p className="text-slate-400">Localized for the Golden Horseshoe Utility Grid.</p>
+             </div>
              
-             {/* HEADER */}
-             <div className="text-center max-w-2xl mx-auto mb-12">
-               <h2 className="text-4xl font-black text-white tracking-tight mb-4">
-                 Scale Your HVAC Business
-               </h2>
-               <p className="text-slate-400 text-lg">
-                 Choose the right plan to manage your GTA fleet, automate Enbridge rebates, and reduce truck rolls.
-               </p>
-               
-               {/* TOGGLE SWITCH */}
-               <div className="flex items-center justify-center gap-4 mt-8">
-                 <span className={`text-sm font-bold ${billingCycle === 'monthly' ? 'text-white' : 'text-slate-500'}`}>Monthly</span>
-                 <button 
-                   onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
-                   className="w-14 h-8 bg-blue-600/20 border border-blue-500/50 rounded-full relative transition-colors hover:border-blue-500"
-                 >
-                   <div className={`absolute top-1 bottom-1 w-6 bg-blue-500 rounded-full transition-all duration-300 ${billingCycle === 'yearly' ? 'left-7' : 'left-1'}`}></div>
-                 </button>
-                 <span className={`text-sm font-bold ${billingCycle === 'yearly' ? 'text-white' : 'text-slate-500'}`}>
-                   Yearly <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full ml-1">SAVE 20%</span>
-                 </span>
-               </div>
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <PriceCard 
+                  tier="FIELD TECH" price="119" 
+                  features={["50 Digital Twins", "Basic Diagnostics", "Mobile Field App"]}
+                />
+                <PriceCard 
+                  tier="GTA GROWTH" price="319" featured
+                  features={["500 Digital Twins", "Agentic AI Diagnostics", "Auto-Rebate Pre-fill", "Priority Grid Alerts"]}
+                />
+                <PriceCard 
+                  tier="ENTERPRISE" price="CUSTOM" 
+                  features={["Unlimited Fleet", "IESO Grid Response API", "White-label Portal", "24/7 Command Center"]}
+                />
              </div>
-
-             {/* PRICING GRID */}
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-               
-               {/* PLAN 1: STARTER */}
-               <div className="bg-[#0f172a] rounded-3xl p-8 border border-slate-800 hover:border-slate-600 transition flex flex-col">
-                 <div className="mb-6">
-                   <h3 className="text-lg font-bold text-white">Technician Starter</h3>
-                   <p className="text-sm text-slate-400 mt-1">Perfect for independent contractors in the GTA.</p>
-                 </div>
-                 <div className="mb-8">
-                   <span className="text-4xl font-black text-white">${billingCycle === 'monthly' ? '149' : '119'}</span>
-                   <span className="text-slate-500 font-medium">/mo (CAD)</span>
-                 </div>
-                 <div className="flex-1 space-y-4 mb-8">
-                   <Feature text="Up to 50 Connected Devices" />
-                   <Feature text="Basic Health Monitoring" />
-                   <Feature text="Email Support (9-5 EST)" />
-                   <Feature text="Mobile App Access" />
-                   <Feature text="Manual Rebate Forms" />
-                 </div>
-                 <button className="w-full py-4 rounded-xl border border-slate-700 text-white font-bold hover:bg-slate-800 transition">
-                   Start Free Trial
-                 </button>
-               </div>
-
-               {/* PLAN 2: GROWTH (HIGHLIGHTED) */}
-               <div className="bg-[#1e293b] rounded-3xl p-8 border-2 border-blue-600 shadow-2xl shadow-blue-900/20 relative flex flex-col transform md:-translate-y-4">
-                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider">
-                   Most Popular
-                 </div>
-                 <div className="mb-6">
-                   <h3 className="text-lg font-bold text-white text-blue-400">Metro Scale</h3>
-                   <p className="text-sm text-slate-300 mt-1">For growing teams managing residential fleets.</p>
-                 </div>
-                 <div className="mb-8">
-                   <span className="text-5xl font-black text-white">${billingCycle === 'monthly' ? '399' : '319'}</span>
-                   <span className="text-slate-400 font-medium">/mo (CAD)</span>
-                 </div>
-                 <div className="flex-1 space-y-4 mb-8">
-                   <Feature text="Up to 500 Connected Devices" highlighted />
-                   <Feature text="Real-time Seam API Access" highlighted />
-                   <Feature text="Lead Manager (Rebate Data)" highlighted />
-                   <Feature text="Auto-fill Enbridge Forms" />
-                   <Feature text="Priority Phone Support" />
-                   <Feature text="TSSA Compliance Logs" />
-                 </div>
-                 <button className="w-full py-4 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition shadow-lg shadow-blue-900/50">
-                   Get Started
-                 </button>
-               </div>
-
-               {/* PLAN 3: ENTERPRISE */}
-               <div className="bg-[#0f172a] rounded-3xl p-8 border border-slate-800 hover:border-slate-600 transition flex flex-col">
-                 <div className="mb-6">
-                   <h3 className="text-lg font-bold text-white">Utility Partner</h3>
-                   <p className="text-sm text-slate-400 mt-1">Full-scale deployment for utilities & enterprises.</p>
-                 </div>
-                 <div className="mb-8">
-                   <span className="text-4xl font-black text-white">Custom</span>
-                 </div>
-                 <div className="flex-1 space-y-4 mb-8">
-                   <Feature text="Unlimited Devices" />
-                   <Feature text="White-label Dashboard" />
-                   <Feature text="IESO Grid Integration" />
-                   <Feature text="Dedicated Account Manager" />
-                   <Feature text="On-premise Deployment" />
-                   <Feature text="Custom API Endpoints" />
-                 </div>
-                 <button className="w-full py-4 rounded-xl border border-slate-700 text-white font-bold hover:bg-slate-800 transition">
-                   Contact Sales
-                 </button>
-               </div>
-
-             </div>
-
-             {/* TRUST FOOTER */}
-             <div className="mt-16 border-t border-slate-800 pt-10 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-               <TrustItem label="Secure Data" sub="SOC2 Compliant" icon={<Shield size={20} className="mx-auto mb-2 text-emerald-500" />} />
-               <TrustItem label="Local Support" sub="Based in Toronto" icon={<MapPin size={20} className="mx-auto mb-2 text-blue-500" />} />
-               <TrustItem label="Grid Ready" sub="IESO Connected" icon={<Zap size={20} className="mx-auto mb-2 text-yellow-500" />} />
-               <TrustItem label="High Uptime" sub="99.9% SLA" icon={<Server size={20} className="mx-auto mb-2 text-purple-500" />} />
-             </div>
-           </div>
-        )}
-
-        {/* VIEW: SETTINGS */}
-        {activeTab === 'settings' && (
-          <div className="max-w-4xl animate-in fade-in duration-500">
-             <header className="mb-10">
-                <h2 className="text-3xl font-bold text-white">Settings</h2>
-                <p className="text-slate-400">Manage your white-label branding and localized configurations.</p>
-              </header>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Branding Form */}
-                <div className="bg-[#0f172a] p-8 rounded-2xl border border-slate-800">
-                  <h3 className="font-bold text-white mb-6">Partner Branding</h3>
-                  <div className="space-y-5">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Company Name</label>
-                      <input type="text" value="Toronto HVAC Solutions" className="w-full bg-[#1e293b] border border-slate-700 rounded-lg p-3 text-white text-sm" />
-                      <p className="text-[10px] text-slate-500 mt-2">Displayed in the sidebar and reports.</p>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Company Logo</label>
-                      <div className="flex gap-4">
-                        <div className="h-16 w-16 bg-[#1e293b] rounded-lg border border-slate-700 flex items-center justify-center text-[10px] text-slate-500">No Logo</div>
-                        <button className="flex-1 border border-dashed border-slate-600 rounded-lg text-slate-400 text-sm hover:border-blue-500 hover:text-blue-500 transition">Upload Logo</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Theme Preview */}
-                <div className="bg-[#0f172a] p-8 rounded-2xl border border-slate-800">
-                  <h3 className="font-bold text-white mb-2">Theme Preview</h3>
-                  <p className="text-xs text-slate-500 mb-6">Your current theme is set to <span className="text-white font-medium">Neutral Enterprise (Dark Navy)</span>.</p>
-                  
-                  <div className="space-y-3">
-                    <div className="h-10 bg-blue-600 rounded-lg w-full"></div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="h-20 bg-[#1e293b] rounded-lg border border-slate-700"></div>
-                      <div className="h-20 bg-[#1e293b] rounded-lg border border-slate-700"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
           </div>
         )}
-
       </main>
     </div>
   );
 };
 
-// --- SUBCOMPONENTS ---
+// --- 2026 UI COMPONENTS ---
 
 const SidebarItem = ({ icon, label, active, onClick }: any) => (
   <div 
     onClick={onClick}
-    className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 group ${active ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+    className={`flex items-center gap-4 px-5 py-4 rounded-2xl cursor-pointer transition-all duration-300 ${active ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20 scale-105' : 'text-slate-500 hover:bg-slate-800/50 hover:text-slate-200'}`}
   >
-    {React.cloneElement(icon, { size: 18, className: active ? 'text-white' : 'text-slate-400 group-hover:text-slate-200' })}
-    <span className="text-sm font-medium">{label}</span>
-  </div>
-);
-
-const Feature = ({ text, highlighted = false }: { text: string, highlighted?: boolean }) => (
-  <div className="flex items-start gap-3">
-    <div className={`mt-1 p-0.5 rounded-full ${highlighted ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-400'}`}>
-      <Check size={12} strokeWidth={4} />
-    </div>
-    <span className={`text-sm ${highlighted ? 'text-white font-medium' : 'text-slate-400'}`}>{text}</span>
-  </div>
-);
-
-const TrustItem = ({ label, sub, icon }: any) => (
-  <div>
     {icon}
-    <p className="font-bold text-white text-sm">{label}</p>
-    <p className="text-xs text-slate-500">{sub}</p>
+    <span className="font-bold text-sm tracking-tight">{label}</span>
   </div>
 );
 
-// HELPER: Thermometer (re-defined to avoid import errors if lucide version varies)
-const Thermometer = ({ size, className }: any) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width={size} height={size} 
-    viewBox="0 0 24 24" fill="none" 
-    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z" />
-  </svg>
+const StatCard = ({ title, value, trend, icon }: any) => (
+  <div className="bg-slate-900/40 backdrop-blur-md border border-white/5 p-6 rounded-[2rem] shadow-xl">
+    <div className="flex justify-between items-start mb-4">
+      <div className="p-2.5 bg-slate-800 rounded-xl">{icon}</div>
+      <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">{trend}</span>
+    </div>
+    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{title}</p>
+    <p className="text-3xl font-black text-white mt-1">{value}</p>
+  </div>
+);
+
+const AgenticAlert = ({ unit, issue, confidence, action }: any) => (
+  <div className="flex items-center justify-between p-5 bg-slate-800/30 rounded-2xl border border-white/5 hover:border-blue-500/50 transition cursor-pointer group">
+    <div className="flex items-center gap-5">
+      <div className="h-12 w-12 rounded-2xl bg-slate-900 flex items-center justify-center border border-white/5 group-hover:bg-blue-600 transition">
+        <Activity size={20} className="text-blue-500 group-hover:text-white" />
+      </div>
+      <div>
+        <h4 className="font-bold text-white text-sm">{unit}</h4>
+        <p className="text-xs text-slate-400">{issue} • <span className="text-blue-400 font-bold">{confidence} Conf.</span></p>
+      </div>
+    </div>
+    <div className="text-right">
+      <p className="text-[10px] font-black text-slate-500 uppercase mb-1">AI Recommendation</p>
+      <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
+        {action} <ChevronRight size={14} />
+      </div>
+    </div>
+  </div>
+);
+
+const RebateProgress = ({ label, value, count }: any) => (
+  <div>
+    <div className="flex justify-between text-xs font-bold mb-2 uppercase tracking-tighter">
+      <span className="text-slate-300">{label}</span>
+      <span className="text-blue-400">{count} Units</span>
+    </div>
+    <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+      <div className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 rounded-full" style={{ width: `${value}%` }}></div>
+    </div>
+  </div>
+);
+
+const PriceCard = ({ tier, price, features, featured = false }: any) => (
+  <div className={`p-10 rounded-[3rem] border transition-all duration-500 flex flex-col ${featured ? 'bg-blue-600 border-blue-400 scale-105 shadow-2xl shadow-blue-600/40 text-white' : 'bg-slate-900/40 border-white/5 text-slate-300 hover:border-white/20'}`}>
+    <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-4">{tier}</h3>
+    <div className="mb-10">
+      <span className="text-6xl font-black tracking-tighter">${price}</span>
+      {price !== 'CUSTOM' && <span className="text-sm font-bold opacity-60"> /MO</span>}
+    </div>
+    <div className="space-y-4 mb-12 flex-1">
+      {features.map((f: string) => (
+        <div key={f} className="flex items-center gap-3 text-sm font-medium italic">
+          <CheckCircle2 size={16} className={featured ? 'text-blue-200' : 'text-blue-500'} /> {f}
+        </div>
+      ))}
+    </div>
+    <button className={`py-5 rounded-2xl font-black text-xs uppercase tracking-widest transition ${featured ? 'bg-white text-blue-600 hover:bg-slate-100' : 'bg-slate-800 text-white hover:bg-slate-700'}`}>
+      Deploy Instance
+    </button>
+  </div>
 );
 
 export default App;
